@@ -297,17 +297,27 @@ public class Capture extends CordovaPlugin {
      * Sets up an intent to capture video.  Result handled by onActivityResult()
      */
     private void captureVideo(Request req) {
-        if(cameraPermissionInManifest && !PermissionHelper.hasPermission(this, Manifest.permission.CAMERA)) {
-            PermissionHelper.requestPermission(this, req.requestCode, Manifest.permission.CAMERA);
+      boolean needExternalStoragePermission =
+        !PermissionHelper.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+      boolean needCameraPermission = cameraPermissionInManifest &&
+        !PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
+      if (needExternalStoragePermission || needCameraPermission) {
+        if (needExternalStoragePermission && needCameraPermission) {
+          PermissionHelper.requestPermissions(this, req.requestCode, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA});
+        } else if (needExternalStoragePermission) {
+          PermissionHelper.requestPermission(this, req.requestCode, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         } else {
-            Intent intent = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
-
-            if(Build.VERSION.SDK_INT > 7){
-                intent.putExtra("android.intent.extra.durationLimit", req.duration);
-                intent.putExtra("android.intent.extra.videoQuality", req.quality);
-            }
-            this.cordova.startActivityForResult((CordovaPlugin) this, intent, req.requestCode);
+          PermissionHelper.requestPermission(this, req.requestCode, Manifest.permission.CAMERA);
         }
+      } else {
+        // Save the number of images currently on disk for later
+        Intent intent = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
+        if(Build.VERSION.SDK_INT > 7){
+          intent.putExtra("android.intent.extra.durationLimit", req.duration);
+          intent.putExtra("android.intent.extra.videoQuality", req.quality);
+        }
+        this.cordova.startActivityForResult((CordovaPlugin) this, intent, req.requestCode);
+      }
     }
 
     /**
