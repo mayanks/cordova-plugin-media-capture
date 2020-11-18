@@ -298,14 +298,14 @@ public class Capture extends CordovaPlugin {
      */
     private void captureVideo(Request req) {
       boolean needExternalStoragePermission =
-        !PermissionHelper.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        !(PermissionHelper.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) && PermissionHelper.hasPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE));
       boolean needCameraPermission = cameraPermissionInManifest &&
         !PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
       if (needExternalStoragePermission || needCameraPermission) {
         if (needExternalStoragePermission && needCameraPermission) {
-          PermissionHelper.requestPermissions(this, req.requestCode, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA});
+          PermissionHelper.requestPermissions(this, req.requestCode, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA});
         } else if (needExternalStoragePermission) {
-          PermissionHelper.requestPermission(this, req.requestCode, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+          PermissionHelper.requestPermission(this, req.requestCode, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE});
         } else {
           PermissionHelper.requestPermission(this, req.requestCode, Manifest.permission.CAMERA);
         }
